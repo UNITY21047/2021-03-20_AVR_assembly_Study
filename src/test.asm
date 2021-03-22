@@ -2,35 +2,39 @@
 ;   Name: Gary Smith
 ;   Name Of Program: test.asm
 ;   Equations:  time = instruction-cycle/frequency,
-;               1000ms = 1s
+;               0.000001μs = 1/1000000MHz
 
-    .nolist
-    .include "/media/pup/Storage/assets/programs/Microchip/v5.45/packs/Microchip/ATmega_DFP/2.2.108/avrasm/inc/m328Pdef.inc"
-    .list
+.nolist
+.include "/media/pup/Storage/assets/programs/Microchip/v5.45/packs/Microchip/ATmega_DFP/2.2.108/avrasm/inc/m328Pdef.inc"
+.list
 
-    .CSEG
-        ldi r16, 0b00100000     ;   7.8125ms = 1/128kHz --> ldi; value for PORTB and DDRB.
-        ldi r17, 0b00001011     ;   7.8125ms --> ldi; value for MCUSR.
-        sbr CKSEL0, 1           ;   7.8125ms --> sbr; setting the bit in this register high for internal clock.
-        sbr CKSEL1, 1           ;   7.8125ms --> sbr; setting the bit in this register high for internal clock.
-        sbr CKSEL2, 0           ;   7.8125ms --> sbr; setting the bit in this register low for internal clock.
-        sbr CKSEL3, 0           ;   7.8125ms --> sbr; setting the bit in this register low for internal clock.
-        sbr MCUSR, r17          ;   7.8125ms --> out; places data in register 17 into address of MCUSR to disable Brown-out Detection.
-        out DDRB, r16           ;   7.8125ms --> out; places data in register 16 into address of DDRB for output.
-        out PORTB, r16          ;   7.8125ms --> out; places data in register 16 into address of PORTB for output.
-        clr r17                 ;   7.8125ms --> clr; clear register 17.
-                                ;  	78.125ms = 10 * 7.8125ms; total.
-main:
-        sbi PB5, 0              ;   7.8125ms --> sbi; set port b pin low.
-        rjmp delay              ;   15.625ms --> rjmp; delay or light off.
-        sbi PB5, 1              ;   7.8125ms --> sbi; set port b pin high.
-        rjmp delay              ;   15.625ms --> rjmp; delay or light on.
-        rjmp main               ;   15.625ms = 2/128kHz --> rjmp; loop back to main label.
-                                ;   ; total.
-delay:
-        ldi r17, 50             ;   15.625ms --> ldi;
-loop_1:                           
-        dec r17                 ;   7.8125ms --> dec; deceraments the value in register 17.
-        brne loop_1             ;   15.625ms --> rjmp; loops back to loop_1 if 
-        ldi r17, 50             ;   15.625ms = 2/128kHz --> ldi;
-        ret
+.CSEG
+                ldi r16, 0b00001011     ; loads value inti register 16
+                out MCUSR, r16          ; Places data from register 16 into address of MCUSR to disable Brown-out Detection.
+                clr r16
+                ldi r16, 0b00100000
+                out DDRB, r16             ; places data in Port B Data Direction Register 5 for output.
+                out PORTB, r16            ; places data in PORTB register 5 for output.
+
+        main:
+                call delay              ; delay for light off.
+                clr r16
+                ldi r16, 0b00000000
+                out PORTB, r16            ; set PORTB pin 5.
+                call delay
+                clr r16
+                ldi r16, 0b00100000
+                out PORTB, r16
+                rjmp main               ; loop back to main label.
+                                
+        delay:
+                ldi r26, low(60000)     ; place 0 in register 26.
+                ldi r27, high(60000)    ; place 64888 in register 26.
+        loop_1:
+                clr r16                 ; clears register 16.
+        loop_2:
+                inc r16                 ; deceraments the value in register 17.
+                brne loop_2             ; loops to loop_1 if the Zero flag is set.
+                adiw r26, 1             ; add 1 to register pair r26,27.
+                brne loop_1             ; loops to loop_2 if the Zero flag is set.
+                ret                     ; exit the delay subroutine.
