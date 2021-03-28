@@ -29,4 +29,4 @@
 
 [X] Research the setting of PORTx and DDrx pins in assembly.
 
-[ ] Construct program.
+[X] Construct program.
